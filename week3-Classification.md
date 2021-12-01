@@ -97,3 +97,78 @@ If our correct answer 'y' is 0, then the cost function will be 0 if our hypothes
 If our correct answer 'y' is 1, then the cost function will be 0 if our hypothesis function outputs 1. If our hypothesis approaches 0, then the cost function will approach infinity.
 
 Note that writing the cost function in this way guarantees that J(θ) is convex for logistic regression.
+
+
+
+## Simplified Cost Function and Gradient Descent 
+
+**Note:** [6:53 - the gradient descent equation should have a 1/m factor]
+
+We can compress our cost function's two conditional cases into one case:
+$$
+\operatorname{Cost}\left(h_{\theta}(x), y\right)=-y \log \left(h_{\theta}(x)\right)-(1-y) \log \left(1-h_{\theta}(x)\right)
+$$
+We can fully write out our entire cost function as follows:
+$$
+J(\theta)=-\frac{1}{m} \sum_{i=1}^{m}\left[y^{(i)} \log \left(h_{\theta}\left(x^{(i)}\right)\right)+\left(1-y^{(i)}\right) \log \left(1-h_{\theta}\left(x^{(i)}\right)\right)\right]
+$$
+A vectorized implementation is:
+$$
+\begin{align*} & h = g(X\theta)\newline & J(\theta) = \frac{1}{m} \cdot \left(-y^{T}\log(h)-(1-y)^{T}\log(1-h)\right) \end{align*}
+$$
+
+### **Gradient Descent**
+
+Remember that the general form of gradient descent is:
+$$
+\begin{align*}& Repeat \; \lbrace \newline & \; \theta_j := \theta_j - \alpha \dfrac{\partial}{\partial \theta_j}J(\theta) \newline & \rbrace\end{align*}
+$$
+
+
+We can work out the derivative part using calculus to get:
+$$
+\begin{align*} & Repeat \; \lbrace \newline & \; \theta_j := \theta_j - \frac{\alpha}{m} \sum_{i=1}^m (h_\theta(x^{(i)}) - y^{(i)}) x_j^{(i)} \newline & \rbrace \end{align*}
+$$
+
+
+Notice that this algorithm is identical to the one we used in linear regression. We still have to simultaneously update all values in theta.
+
+A vectorized implementation is:
+$$
+\theta:=\theta-\frac{\alpha}{m} X^{T}(g(X \theta)-\vec{y})
+$$
+
+## Advanced Optimization
+
+**Note:** [7:35 - '100' should be 100 instead. The value provided should be an integer and not a character string.]
+
+- **"Conjugate gradient"**
+- **"BFGS"**
+- **"L-BFGS"** 
+
+are more **sophisticated**, **faster** ways to optimize θ that can be used instead of gradient descent. We suggest that you should not write these more sophisticated algorithms yourself (unless you are an expert in numerical computing) but use the libraries instead, as they're already tested and highly optimized. Octave provides them.
+
+We first need to provide a function that evaluates the following two functions for a given input value θ:
+$$
+\begin{align*} & J(\theta) \newline & \dfrac{\partial}{\partial \theta_j}J(\theta)\end{align*}
+$$
+
+
+- We can write a single function that returns both of these:
+
+```matlab
+function [jVal, gradient] = costFunction(theta) 
+jVal = [code to compute J(theta)]; 
+gradient = [code to compute derivative of J(theta)];
+end
+```
+
+Then we can use octave's "fminunc()" optimization algorithm along with the "optimset()" function that creates an object containing the options we want to send to "fminunc()". (Note: the value for MaxIter should be an integer, not a character string - errata in the video at 7:30)
+
+```
+options = optimset('GradObj', 'on', 'MaxIter', 100);
+initialTheta = zeros(2,1);  
+[optTheta, functionVal, exitFlag] = fminunc(@costFunction, initialTheta, options);
+```
+
+We give to the function "fminunc()" our cost function, our initial vector of theta values, and the "options" object that we created beforehand.
