@@ -146,7 +146,7 @@ $$
 - **"BFGS"**
 - **"L-BFGS"** 
 
-are more **sophisticated**, **faster** ways to optimize θ that can be used instead of gradient descent. We suggest that you should not write these more sophisticated algorithms yourself (unless you are an expert in numerical computing) but use the libraries instead, as they're already tested and highly optimized. Octave provides them.
+are more **sophisticated**, **faster** ways to optimize θ that can be used instead of gradient descent. We suggest that you should not write these more sophisticated algorithms yourself (unless you are an expert in numerical computing) but **use the libraries in matlab  instead**, as they're already tested and highly optimized. Octave provides them.
 
 We first need to provide a function that evaluates the following two functions for a given input value θ:
 $$
@@ -172,3 +172,64 @@ initialTheta = zeros(2,1);
 ```
 
 We give to the function "fminunc()" our cost function, our initial vector of theta values, and the "options" object that we created beforehand.
+
+### [fminunc](https://www.mathworks.com/help/optim/ug/fminunc.html)
+
+Find minimum of unconstrained multivariable function
+
+Finds the minimum of a problem specified by 
+$$
+\min _{x} f(x)
+$$
+where *f*(*x*) is a function that returns a scalar, *x* is a vector or a matrix; see [Matrix Arguments](https://www.mathworks.com/help/optim/ug/matrix-arguments.html).
+
+- we try to solve a problem of `J(θ) =  (θ1 - 5)^2 + (θ2 - 5)^2` in gradient decent:
+
+```matlab
+% write a single function to compute the cost.
+function [f, g] = costFunction(theta)
+	f = sum((theta - 5).^2);	% cost
+	g = 2*(theta - 5);			% gradient
+end
+
+% set options
+options = optimoptions('fminunc','Algorithm','trust-region','SpecifyObjectiveGradient',true);
+
+% use 
+theta0 = zeros(2,1);  
+x = fminunc(@costFunction,theta0,options)
+```
+
+> output
+
+```
+Local minimum found.
+Optimization completed because the size of the gradient is less than
+the value of the optimality tolerance.
+x =
+     5
+     5
+```
+
+
+
+## Multiclass Classification: One-vs-all
+
+Now we will approach the classification of data when we have more than two categories. Instead of y = {0,1} we will expand our definition so that y = {0,1...n}.
+
+Since y = {0,1...n}, we divide our problem into n+1 (+1 because the index starts at 0) binary classification problems; in each one, we predict the probability that 'y' is a member of one of our classes.
+$$
+\begin{align*}& y \in \lbrace0, 1 ... n\rbrace \newline& h_\theta^{(0)}(x) = P(y = 0 | x ; \theta) \newline& h_\theta^{(1)}(x) = P(y = 1 | x ; \theta) \newline& \cdots \newline& h_\theta^{(n)}(x) = P(y = n | x ; \theta) \newline& \mathrm{prediction} = \max_i( h_\theta ^{(i)}(x) )\newline\end{align*}
+$$
+We are basically choosing one class and then lumping all the others into a single second class. We do this repeatedly, applying binary logistic regression to each case, and then use the hypothesis that returned the highest value as our prediction.
+
+The following image shows how one could classify 3 classes: 
+
+![img](https://d3c33hcgiwev3.cloudfront.net/imageAssetProxy.v1/cqmPjanSEeawbAp5ByfpEg_299fcfbd527b6b5a7440825628339c54_Screenshot-2016-11-13-10.52.29.png?expiry=1638489600000&hmac=i6BBUsfkQTifcW-2-qCJyGy80dNeHBtqwtEFO9sImt0)
+
+**To summarize:** 
+
+Train a logistic regression classifier h*θ*(*x*) for each class to predict the probability that y = i. To make a prediction on a new x, pick the class that maximizes  *hθ*(*x*)
+
+
+
