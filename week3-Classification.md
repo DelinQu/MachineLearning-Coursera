@@ -108,7 +108,7 @@ We can compress our cost function's two conditional cases into one case:
 $$
 \operatorname{Cost}\left(h_{\theta}(x), y\right)=-y \log \left(h_{\theta}(x)\right)-(1-y) \log \left(1-h_{\theta}(x)\right)
 $$
-We can fully write out our entire cost function as follows:
+We can fully write out our **entire cost function** as follows:
 $$
 J(\theta)=-\frac{1}{m} \sum_{i=1}^{m}\left[y^{(i)} \log \left(h_{\theta}\left(x^{(i)}\right)\right)+\left(1-y^{(i)}\right) \log \left(1-h_{\theta}\left(x^{(i)}\right)\right)\right]
 $$
@@ -202,7 +202,7 @@ x = fminunc(@costFunction,theta0,options)
 
 > output
 
-```
+```zsh
 Local minimum found.
 Optimization completed because the size of the gradient is less than
 the value of the optimality tolerance.
@@ -233,3 +233,92 @@ Train a logistic regression classifier h*θ*(*x*) for each class to predict the 
 
 
 
+## The Problem of Overfitting
+
+Consider the problem of predicting y from x ∈ R. The leftmost figure below shows the result of fitting a y = θ_0 + θ_1x*θ*0+*θ*1*x* to a dataset. We see that the data doesn’t really lie on straight line, and so the fit is not very good. 
+
+![img](https://d3c33hcgiwev3.cloudfront.net/imageAssetProxy.v1/0cOOdKsMEeaCrQqTpeD5ng_2a806eb8d988461f716f4799915ab779_Screenshot-2016-11-15-00.23.30.png?expiry=1639180800000&hmac=HYM_puZtBjEdynILECeE5Vo0rtTUlC8WU3dcFoHEksE)
+
+Instead, if we had added an extra feature x^2 , and fit y = theta_0 + theta_1x , then we obtain a slightly better fit to the data (See middle figure). Naively, it might seem that the more features we add, the better. However, there is also a danger in adding too many features: The rightmost figure is the result of fitting a 5^{th}5*t**h* order polynomial y*=∑*j*=05*	θj xj. We see that even though the fitted curve passes through the data perfectly, we would not expect this to be a very good predictor of, say, housing prices (y) for different living areas (x). Without formally defining what these terms mean, we’ll say the figure on the left shows an instance of **underfitting**—in which the data clearly shows structure not captured by the model—and the figure on the right is an example of **overfitting**.
+
+Underfitting, or high bias, is when the form of our hypothesis function h maps poorly to the trend of the data. It is usually caused by a function that is too simple or uses too few features. At the other extreme, overfitting, or high variance, is caused by a hypothesis function that fits the available data but does not generalize well to predict new data. It is usually caused by a complicated function that creates a lot of unnecessary curves and angles unrelated to the data.
+
+This terminology is applied to both linear and logistic regression. There are two main options to address the issue of overfitting:
+
+**1）Reduce the number of features:**
+
+- Manually select which features to keep.
+- Use a **model selection algorithm** (studied later in the course).
+
+**2）Regularization**
+
+- Keep all the features, but reduce the **magnitude of parameters** θj.
+- Regularization works well when we have a lot of slightly useful features.
+
+
+
+## Cost Function
+
+**Note:** [5:18 - There is a typo. It should be \sum_{j=1}^{n} \theta _j ^2∑*j*=1*n**θ**j*2 instead of \sum_{i=1}^{n} \theta _j ^2∑*i*=1*n**θ**j*2]
+
+If we have overfitting from our hypothesis function, we can reduce the weight that some of the terms in our function carry by increasing their cost.
+
+Say we wanted to make the following function more quadratic:
+$$
+\theta_0 + \theta_1x+\theta_2x^2 + \theta_3x^4
+$$
+We'll want to eliminate the influence of \theta_3x^3*θ*3*x*3 and \theta_4x^4*θ*4*x*4 . Without actually getting rid of these features or changing the form of our hypothesis, we can instead modify our **cost function**:
+$$
+min_{\theta}\frac{1}{2m}\sum_{i=1}^{m}(h_\theta (x^{(i)}-y^{(i)})^2+1000\theta_3^2+1000\theta_4^2 
+$$
+
+
+We've added two extra terms at the end to inflate the cost of \theta_3*θ*3 and \theta_4*θ*4. Now, in order for the cost function to get close to zero, we will have to reduce the values of \theta_3*θ*3 and \theta_4*θ*4 to near zero. This will in turn greatly reduce the values of \theta_θ*3*x*3 and  *θ*4*x*4 in our hypothesis function. As a result, we see that the new hypothesis (depicted by the pink curve) looks like a quadratic function but fits the data better due to the extra small terms θ*3*x*3 and  *θ*4*x*4.
+
+![img](https://d3c33hcgiwev3.cloudfront.net/imageAssetProxy.v1/j0X9h6tUEeawbAp5ByfpEg_ea3e85af4056c56fa704547770da65a6_Screenshot-2016-11-15-08.53.32.png?expiry=1639180800000&hmac=AB65Qy2gXVzV2VSE_oqNZycWBYvk4dzXcdF6JNgAOfQ)
+
+We could also regularize all of our theta parameters in a single summation as:
+$$
+\min _{\theta} \frac{1}{2 m} \sum_{i=1}^{m}\left(h_{\theta}\left(x^{(i)}\right)-y^{(i)}\right)^{2}+\lambda \sum_{j=1}^{n} \theta_{j}^{2}
+$$
+
+
+The λ, or lambda, is the **regularization parameter**. It determines how much the costs of our theta parameters are inflated. 
+
+Using the above cost function with the extra summation, we can smooth the output of our hypothesis function to reduce overfitting. If lambda is chosen to be too large, it may smooth out the function too much and cause underfitting. Hence, what would happen if \lambda = 0*λ*=0 or is too small ?
+
+
+
+## Regularized Linear Regression
+
+**Note:** [8:43 - It is said that X is non-invertible if m \leq≤ n. The correct statement should be that X is non-invertible if m < n, and may be non-invertible if m = n.
+
+We can apply regularization to both linear regression and logistic regression. We will approach linear regression first.
+
+### Gradient Descent
+
+We will modify our gradient descent function to separate out \theta_0*θ*0 from the rest of the parameters because we do not want to penalize:
+$$
+\begin{align*} & \text{Repeat}\ \lbrace \newline & \ \ \ \ \theta_0 := \theta_0 - \alpha\ \frac{1}{m}\ \sum_{i=1}^m (h_\theta(x^{(i)}) - y^{(i)})x_0^{(i)} \newline & \ \ \ \ \theta_j := \theta_j - \alpha\ \left[ \left( \frac{1}{m}\ \sum_{i=1}^m (h_\theta(x^{(i)}) - y^{(i)})x_j^{(i)} \right) + \frac{\lambda}{m}\theta_j \right] &\ \ \ \ \ \ \ \ \ \ j \in \lbrace 1,2...n\rbrace\newline & \rbrace \end{align*}
+$$
+
+
+The term \frac{\lambda}{m}\theta_j*m**λ**θ**j* performs our regularization. With some manipulation our update rule can also be represented as:
+$$
+\theta_{j}:=\theta_{j}\left(1-\alpha \frac{\lambda}{m}\right)-\alpha \frac{1}{m} \sum_{i=1}^{m}\left(h_{\theta}\left(x^{(i)}\right)-y^{(i)}\right) x_{j}^{(i)}
+$$
+
+
+The first term in the above equation, 1 - \alpha\frac{\lambda}{m}1−*α**m**λ* will always be less than 1. Intuitively you can see it as reducing the value of \theta_j*θ**j* by some amount on every update. Notice that the second term is now exactly the same as it was before.
+
+### **Normal Equation**
+
+Now let's approach regularization using the alternate method of the non-iterative normal equation.
+
+To add in regularization, the equation is the same as our original, except that we add another term inside the parentheses:
+$$
+\begin{align*}& \theta = \left( X^TX + \lambda \cdot L \right)^{-1} X^Ty \newline& \text{where}\ \ L = \begin{bmatrix} 0 & & & & \newline & 1 & & & \newline & & 1 & & \newline & & & \ddots & \newline & & & & 1 \newline\end{bmatrix}\end{align*}
+$$
+L is a matrix with 0 at the top left and 1's down the diagonal, with 0's everywhere else. It should have dimension (n+1)×(n+1). Intuitively, this is the identity matrix (though we are not including x_0*x*0), multiplied with a single real number λ.
+
+Recall that if m < n, then X**T**X s non-invertible. However, when we add the term λ⋅L, then X^TX + λ⋅L becomes invertible.
